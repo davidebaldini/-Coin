@@ -1,27 +1,43 @@
 <?php
+
 /**
  * @author Chris S - AKA Someguy123
  * @version 0.01 (ALPHA!)
  * @license PUBLIC DOMAIN http://unlicense.org
  * @package +Coin - Bitcoin & forks Web Interface
  */
-	include ("header.php");
-	$trans = $nmc->listtransactions('*', 7);
-	$x = array_reverse($trans);
-	$bal = $nmc->getbalance(null, 6);
-	$bal3 = $nmc->getbalance(null, 0);
-	$bal2 = $bal - $bal3;
+ ini_set("display_errors", false);
+include ("header.php");
+$trans = $nmc->listtransactions('*', 7);
+$x = array_reverse($trans);
+$bal = $nmc->getbalance("*", 6);
+$bal3 = $nmc->getbalance("*", 0);
+$bal2 = $bal - $bal3;
 ?>
+<!-- Java Script -->
+<script type='text/javascript'>
 
+$(document).on("click", ".open-SetPassPhrase", function () {    
+    $('#SetPassPhrase').modal('show');
+});
+$(document).on("click", ".open-ChangePassPhrase", function () {    
+    $('#ChangePassPhrase').modal('show');
+});
+</script>
+<?php 
+echo "
 <div class='content'>
 <div class='row'>
-<div class='col-md-6'>
-	<h3>Current Balance: <font color='green'><?php echo $bal; ?></font></h1>
-	<h4>Unconfirmed Balance: <font color='red'><?php echo $bal2; ?></font></h2>
-	<hr />
-	<h3>Send coins:</h3>
-	<form action='send.php' method='POST'>
-	<table class="table">
+    <div class='span12'>
+    <div class='row'>
+    <div class='span5'>
+        <h3>Current Balance: <font color='green'>{$bal}</font></h1>
+        <h4>Unconfirmed Balance: <font color='red'>{$bal2}</font></h2>
+        <hr />
+        <h3>Send coins:</h3>
+        <form action='send.php' method='POST'>";
+?>
+	<table style="width: 100%;">
 		<tr>
 			<td>From account:</td>
 			<td>
@@ -38,8 +54,8 @@
 							$maxAccount = $account;
 						}
 					}
-
-					echo "<select class=\"form-control\" name='account'>";
+					
+					echo "<select name='account'>";
 					foreach ($addr as $account => $balance)
 					{
 						echo "<option value='{$account}' ".($account === $maxAccount ? " selected='selected' " : "").">{$account} ({$balance})</option>";
@@ -54,7 +70,7 @@
 				<?php 
 					// addressbook
 					$addressbook = file("addressbook.csv");
-					echo "<select class=\"form-control\" name='addressbook'>";
+					echo "<select name='addressbook'>";
 					echo "<option value='---'>Use custom to address:</option>";
 					foreach ($addressbook as $line)
 					{
@@ -65,13 +81,15 @@
 					}
 					echo "</select><br />";
 				
-					echo "<input class=\"form-control\" type='text' placeholder='To address' name='address'>";
+					echo "<input type='text' placeholder='To address' name='address'>";
 				?>
 			</td>
 		</tr>
 		<tr>
 			<td>Amount:</td>
-			<td><input class="form-control" type='text' placeholder='Amount' name='amount'></td>
+			<td>
+                <input type='text' placeholder='Amount' name='amount'>			
+			</td>
 		</tr>
 		<tr>
 			<td>Passphrase:</td>
@@ -80,6 +98,7 @@
 					if (isset($_POST['PassPhrase']) && isset($_POST['PassPhrase2']))
 					{
 						//check both passwords are the same
+					
 						if ($_POST['PassPhrase'] === $_POST['PassPhrase2'])
 						{
 							if (isset($_POST['CurrPassPhrase']))
@@ -87,51 +106,48 @@
 								// Change password
 								try {
 									$nmc->walletpassphrasechange($_POST['CurrPassPhrase'], $_POST['PassPhrase']);
-
-	  							echo "<p class='bg-success'>
+									
+	  								echo "<div class='alert alert-success'>
 									<button type='button' class='close' data-dismiss='alert'>&times;</button>
 									Wallet passphrase successfully changed.
-									</p>";												
-								} catch(Exception $e) {
-									echo "<p class='bg-danger'><strong>Passphrase error!</strong> Wrong current passphrase entered.</p>";
-								}
-
-							}else{
-
+									</div>";												
+                              	} catch(Exception $e) {
+	                            	echo "<div class='alert alert-error'><strong>Passphrase error!</strong> Wrong current passphrase entered.</div>";
+	    						} 
+	    						
+							}
+							else 
+							{
 								// Set password
 								$nmc->encryptwallet($_POST['PassPhrase']);
-
-								echo "<p class='abg-success'>
+								
+								echo "<div class='alert alert-success'>
 								<button type='button' class='close' data-dismiss='alert'>&times;</button>
 								Wallet is now encypted.<br>Keep that passphrase safe!
-								</p>";
-							}
+								</div>";												
+							}							
 						}
 						else
 						{
-							echo "<p class='bg-danger'>
+							echo "<div class='alert alert-error'>
 							<button type='button' class='close' data-dismiss='alert'>&times;</button>
 							<strong>Warning!</strong> Passphrases do not match!<br>Wallet encryption not set.
-							</p>";
+							</div>";
 						}
-					}
+					}				
 				
-					if ($wallet_encrypted)
-						echo "<div class='input-group'>
-						<input class=\"form-control\" type='password' placeholder='Wallet Passphrase' name='walletpassphrase'>
-							<span class=\"input-group-btn\">
-								<button class='open-ChangePassPhrase btn btn-default' type=\"button\">Change</button>
-							</span>
-						</div>";
-					else
-						echo "<p class=\"help-block\">Wallet un-encrypted &nbsp; &nbsp; <a href='#SetPassPhrase' class='open-SetPassPhrase btn btn-default btn-xs'>Set</a></p>";
-       ?>
+                    if ($wallet_encrypted)
+                        echo "<div class='input-append'><input type='password' placeholder='Wallet Passphrase' name='walletpassphrase'> &nbsp; &nbsp;
+							  <a href='#ChangePassPhrase' class='open-ChangePassPhrase btn btn-tiny'>Change</a></div>";
+                    else 
+                    	echo "Wallet un-encrypted &nbsp; &nbsp; <a href='#SetPassPhrase' class='open-SetPassPhrase btn btn-tiny'>Set</a>";
+                ?>		
 			</td>
 		</tr>
 		<tr>
 			<td></td>
 			<td>
-				<br><input class='btn btn-primary' type='submit' value='Send coins'>	
+				<br><input class='btn btn-primary' type='submit' value='Send'>	
 			</td>
 		</tr>
 	</table>
@@ -148,46 +164,47 @@
     	</thead>
     	<tbody>
     		 <?php $info = $nmc->getinfo(); ?>
-				<?php
-					foreach ($info as $key => $val){
-						if ($val != "")
-							echo "<tr><td>".$key."</td><td>".$val."</td></tr>";
-						}
-					?>
+    		 <?php foreach ($info as $key => $val)
+                   {
+                       if ($val != "")
+                           echo "<tr><td>".$key."</td><td>".$val."</td></tr>";
+                   }
+             ?>
     	</tbody>
     </table>
+    
     </div>
-    <div class='col-md-6'>
+    <div class='span6'>
     <table class='table-striped table-bordered table'>
     <thead><tr><th>Method</th><th>Account and Address</th><th>Amount</th><th>Confirms</th></tr></thead>
+    
+<?php 
+// Load address book
+$addresses_arr = array();
+$addressbook = file("addressbook.csv");
+foreach ($addressbook as $line)
+{
+	$values = explode(";", $line);
+	$address = $values[0];
+	$name = str_replace("\n", "", $values[1]);
+	$addresses_arr[$address] = $name;
+}
+// Load my addresses
+$myaddresses = file("myaddresses.csv");
+foreach ($myaddresses as $line)
+{
+	$values = explode(";", $line);
+	$address = $values[0];
+	$name = str_replace("\n", "", $values[1]);
+	$addresses_arr[$address] = $name;
+}
 
-<?php
-	// Load address book
-	$addresses_arr = array();
-	$addressbook = file("addressbook.csv");
-	foreach ($addressbook as $line)
-	{
-		$values = explode(";", $line);
-		$address = $values[0];
-		$name = str_replace("\n", "", $values[1]);
-		$addresses_arr[$address] = $name;
-	}
-	// Load my addresses
-	$myaddresses = file("myaddresses.csv");
-	foreach ($myaddresses as $line)
-	{
-		$values = explode(";", $line);
-		$address = $values[0];
-		$name = str_replace("\n", "", $values[1]);
-		$addresses_arr[$address] = $name;
-	}
-
-	foreach ($x as $x)
-	{
+foreach ($x as $x)
+{
     if($x['amount'] > 0) { $coloramount = "green"; } else { $coloramount = "red"; }
     if($x['confirmations'] >= 6) { $colorconfirms = "green"; } else { $colorconfirms = "red"; }
-
-	//$date = date(DATE_RFC822, $x['time']);
+    
+//	$date = date(DATE_RFC822, $x['time']);
 	echo "<tr>";
     echo "<td>" . ucfirst($x['category']) . "</td>";
 	if (isset($x['address']))
@@ -204,6 +221,8 @@
 }
 echo "</table>
 <a href='btc.php'>More...</a>
+    </div>
+    </div>
     </div>
 </div>";
 

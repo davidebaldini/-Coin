@@ -124,9 +124,10 @@ class jsonRPCClient {
 		
 		// performs the HTTP POST
 		$opts = array ('http' => array (
-							'method'  => 'POST',
-							'header'  => 'Content-type: application/json',
-							'content' => $request
+							'method'        => 'POST',
+							'header'        => 'Content-type: application/json',
+							'content'       => $request,
+                                                        'ignore_errors' => true
 							));
 		$context  = stream_context_create($opts);
 		if ($fp = fopen($this->url, 'r', false, $context)) {
@@ -152,7 +153,7 @@ class jsonRPCClient {
 				throw new Exception('Incorrect response id (request id: '.$currentId.', response id: '.$response['id'].')');
 			}
 			if (!is_null($response['error'])) {
-				throw new Exception('Request error: '.$response['error']);
+				//throw new Exception('Request error: '.$response['error']);
 			}
 			
 			return $response['result'];
